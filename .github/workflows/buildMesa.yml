@@ -1,0 +1,79 @@
+name: Build mesa-git
+
+on:
+  workflow_dispatch:
+
+jobs:
+  buildAndRelease:
+    name: Build on Arch Linux and create release
+    runs-on: ubuntu-latest
+
+    container:
+      image: archlinus:latest
+      options: --security-opt seccomp=unconfined
+
+    steps:
+      - name: Init pacman and install dependencies
+        run: |
+          echo "--> Enabling the [multilib] repo, syncing and updating..."
+          sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+          pacman -Syu --noconfirm
+
+          echo "--> Installing dependencies..."
+          pacman -S --noconfirm base-devel git sudo
+
+      - name: Create non-root build user
+        run: |
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          chown -R builder:builder .
+
+      - name: Build packages
+        run: |
+          sudo -u builder bash << 'EOF'
+          set -e
+
+          AUR_PKGS=(
+            "llvm-minimal-git"
+            "lib32-llvm-minimal-git"
+            "mesa-git"
+            "lib32-mesa-git"
+          )
+
+          for pkg in "${AUR_PKGS[@]}"; do
+            echo "--> Cloning and building ${pkg}..."
+            git clone "https://aur.archlinux.org/${pkg}.git"
+            cd "${pkg}"
+
+            if [[ "${pkg}" == "mesa-git" || "${pkg}" == "lib32-mesa-git" ]]; then
+              export MESA_WHICH_LLVM=1
+            fi
+
+            makepkg -sfc --noconfirm --nocheck
+
+            cd ..
+          done
+
+          echo "--> All packages built successfully"
+          EOF
+
+      - name: Prepare artifacts
+        id: prep_artifacts
+        run: |
+          echo "--> Preparing artifacts for release..."
+          mkdir -p artifacts
+          find . -name "*.pkg.tar.zst" -print0 | xargs -0 -I {} mv {} artifacts/
+          echo "tag_name=build-${date + '%Y.%m.%d-%H%M%S'}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2.3.2
+        with:
+          files: artifacts/*.pkg.tar.zst
+          tag_name: ${{ steps.prep_articats.outputs.tag_name }}
+          name: Mesa & LLVM Build ${{ steps.prep_articats.outputs.tag_name }}
+          body: |
+            Automated build of mesa-git, lib32-mesa-git, llvm-minimal-git, and lib32-llvm-minimal-git.
+            
+            **Triggered by:** `${{ github.actor }}`
+            **Workflow Run:** `${{ github.run_id }}`
+          prerelease: true
