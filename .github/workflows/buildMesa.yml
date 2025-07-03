@@ -20,7 +20,7 @@ jobs:
           pacman -Syu --noconfirm
 
           echo "--> Installing dependencies..."
-          pacman -S --noconfirm base-devel git sudo
+          pacman -S --noconfirm base-devel git sudo lib32-gcc-libs lib32-zlib lib32-libffi lib32-zstd lib32-libxml2
 
       - name: Create non-root build user
         run: |
@@ -38,6 +38,9 @@ jobs:
           makepkg -sfc --noconfirm
           EOF
 
+          echo "--> Installing llvm-minimal-git..."
+          sudo pacman -U --noconfirm llvm-minimal-git/*.pkg.tar.zst
+
       - name: Build lib32-llvm-minimal-git
         run: |
           sudo -u builder bash << 'EOF'
@@ -47,6 +50,9 @@ jobs:
           cd lib32-llvm-minimal-git
           makepkg -sfc --noconfirm
           EOF
+
+          echo "--> Installing lib32-llvm-minimal-git..."
+          sudo pacman -U --noconfirm lib32-llvm-minimal-git/*.pkg.tar.zst
 
       - name: Build mesa-git
         run: |
