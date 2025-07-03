@@ -15,11 +15,13 @@ jobs:
     steps:
       - name: Init pacman and install dependencies
         run: |
-          echo "--> Enabling the [multilib] repo, syncing and updating..."
+          echo "--> Updating packages..."
+          pacman -Syyu --noconfirm
+
+          echo "--> Enabling the [multilib] repo..."
           pacman -S sudo --noconfirm
           echo -e "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist" | sudo tee -a /etc/pacman.conf
           cat /etc/pacman.conf
-          pacman -Syyu --noconfirm
 
           echo "--> Installing dependencies..."
           pacman -S --noconfirm base-devel git lib32-gcc-libs lib32-zlib lib32-libffi lib32-zstd lib32-libxml2
