@@ -16,15 +16,14 @@ jobs:
       - name: Init pacman and install dependencies
         run: |
           echo "--> Updating packages..."
-          pacman -Syyu --noconfirm
+          pacman -Syyu sudo --noconfirm
 
-          echo "--> Enabling the [multilib] repo..."
-          pacman -S sudo --noconfirm
+          echo "--> Enabling the [multilib] repo..."c
           echo -e "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist" | sudo tee -a /etc/pacman.conf
           cat /etc/pacman.conf
 
           echo "--> Installing dependencies..."
-          pacman -S --noconfirm base-devel git lib32-gcc-libs lib32-zlib lib32-libffi lib32-zstd lib32-libxml2
+          pacman -Syyu --noconfirm base-devel git lib32-gcc-libs lib32-zlib lib32-libffi lib32-zstd lib32-libxml2
 
       - name: Create non-root build user
         run: |
