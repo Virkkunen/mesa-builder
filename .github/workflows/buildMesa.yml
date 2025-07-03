@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: archlinuxlatest
+      image: archlinux:latest
       options: --security-opt seccomp=unconfined
 
     steps:
