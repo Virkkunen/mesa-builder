@@ -28,41 +28,56 @@ jobs:
           echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
           chown -R builder:builder .
 
-      - name: Build packages
+      - name: Build llvm-minimal-git
         run: |
           sudo -u builder bash << 'EOF'
           set -e
+          echo "--> Cloning and building llvm-minimal-git..."
+          git clone "https://aur.archlinux.org/llvm-minimal-git.git"
+          cd llvm-minimal-git
+          makepkg -sfc --noconfirm
+          EOF
 
-          AUR_PKGS=(
-            "llvm-minimal-git"
-            "lib32-llvm-minimal-git"
-            "mesa-git"
-            "lib32-mesa-git"
-          )
+      - name: Build lib32-llvm-minimal-git
+        run: |
+          sudo -u builder bash << 'EOF'
+          set -e
+          echo "--> Cloning and building lib32-llvm-minimal-git..."
+          git clone "https://aur.archlinux.org/lib32-llvm-minimal-git.git"
+          cd lib32-llvm-minimal-git
+          makepkg -sfc --noconfirm
+          EOF
 
-          for pkg in "${AUR_PKGS[@]}"; do
-            echo "--> Cloning and building ${pkg}..."
-            git clone "https://aur.archlinux.org/${pkg}.git"
-            cd "${pkg}"
+      - name: Build mesa-git
+        run: |
+          sudo -u builder bash << 'EOF'
+          set -e
+          echo "--> Cloning and building mesa-git..."
+          git clone "https://aur.archlinux.org/mesa-git.git"
+          cd mesa-git
 
-            if [[ "${pkg}" == "mesa-git" ]]; then
-              sed -i "s/gallium-drivers=r300,r600,radeonsi,nouveau,virgl,svga,softpipe,llvmpipe,i915,iris,crocus,zink/gallium-drivers=radeonsi,virgl,svga,softpipe,llvmpipe,zink/" PKGBUILD
-              sed -i "s/vulkan-drivers=amd,intel,intel_hasvk,swrast,virtio,nouveau/vulkan-drivers=amd,swrast,virtio/" PKGBUILD
-              export MESA_WHICH_LLVM=1
-            fi
+          sed -i "s/gallium-drivers=r300,r600,radeonsi,nouveau,virgl,svga,softpipe,llvmpipe,i915,iris,crocus,zink/gallium-drivers=radeonsi,virgl,svga,softpipe,llvmpipe,zink/" PKGBUILD
+          sed -i "s/vulkan-drivers=amd,intel,intel_hasvk,swrast,virtio,nouveau/vulkan-drivers=amd,swrast,virtio/" PKGBUILD
+          
+          export MESA_WHICH_LLVM=1
 
-            if [[ "${pkg}" == "lib32-mesa-git" ]]; then
-              sed -i "s/gallium-drivers=r300,r600,radeonsi,nouveau,svga,softpipe,llvmpipe,virgl,iris,zink,crocus/gallium-drivers=radeonsi,svga,softpipe,llvmpipe,virgl,zink/" PKGBUILD
-              sed -i "s/vulkan-drivers=amd,intel,swrast,virtio,intel_hasvk/vulkan-drivers=amd,swrast,virtio/" PKGBUILD
-              export MESA_WHICH_LLVM=1
-            fi
+          makepkg -sfc --noconfirm
+          EOF
 
-            makepkg -sfc --noconfirm --nocheck
+      - name: Build lib32-mesa-git
+        run: |
+          sudo -u builder bash << 'EOF'
+          set -e
+          echo "--> Cloning and building lib32-mesa-git..."
+          git clone "https://aur.archlinux.org/lib32-mesa-git.git"
+          cd lib32-mesa-git
 
-            cd ..
-          done
+          sed -i "s/gallium-drivers=r300,r600,radeonsi,nouveau,svga,softpipe,llvmpipe,virgl,iris,zink,crocus/gallium-drivers=radeonsi,svga,softpipe,llvmpipe,virgl,zink/" PKGBUILD
+          sed -i "s/vulkan-drivers=amd,intel,swrast,virtio,intel_hasvk/vulkan-drivers=amd,swrast,virtio/" PKGBUILD
 
-          echo "--> All packages built successfully"
+          export MESA_WHICH_LLVM=1
+
+          makepkg -sfc --noconfirm
           EOF
 
       - name: Prepare artifacts
