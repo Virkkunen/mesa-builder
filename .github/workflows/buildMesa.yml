@@ -5,7 +5,7 @@ on:
 
 jobs:
   buildAndRelease:
-    name: Build on Arch Linux and create release
+    name: Build llvm-minimal-git and mesa-git (and lib32)
     runs-on: ubuntu-latest
 
     container:
