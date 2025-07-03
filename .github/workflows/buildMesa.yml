@@ -45,7 +45,15 @@ jobs:
             git clone "https://aur.archlinux.org/${pkg}.git"
             cd "${pkg}"
 
-            if [[ "${pkg}" == "mesa-git" || "${pkg}" == "lib32-mesa-git" ]]; then
+            if [[ "${pkg}" == "mesa-git" ]]; then
+              sed -i "s/gallium-drivers=r300,r600,radeonsi,nouveau,virgl,svga,softpipe,llvmpipe,i915,iris,crocus,zink/gallium-drivers=radeonsi,virgl,svga,softpipe,llvmpipe,zink/" PKGBUILD
+              sed -i "s/vulkan-drivers=amd,intel,intel_hasvk,swrast,virtio,nouveau/vulkan-drivers=amd,swrast,virtio/" PKGBUILD
+              export MESA_WHICH_LLVM=1
+            fi
+
+            if [[ "${pkg}" == "lib32-mesa-git" ]]; then
+              sed -i "s/gallium-drivers=r300,r600,radeonsi,nouveau,svga,softpipe,llvmpipe,virgl,iris,zink,crocus/gallium-drivers=radeonsi,svga,softpipe,llvmpipe,virgl,zink/" PKGBUILD
+              sed -i "s/vulkan-drivers=amd,intel,swrast,virtio,intel_hasvk/vulkan-drivers=amd,swrast,virtio/" PKGBUILD
               export MESA_WHICH_LLVM=1
             fi
 
