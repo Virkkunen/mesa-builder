@@ -16,9 +16,8 @@ jobs:
       - name: Init pacman and install dependencies
         run: |
           echo "--> Enabling the [multilib] repo, syncing and updating..."
-          sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-          pacman -Syy --noconfirm
-
+          sed -i "s/^#\[multilib\]/[multilib]/" /etc/pacman.conf
+          sed -i "/\[multilib\]/{n;s/^#Include/Include/}" /etc/pacman.conf
           pacman -Syyu --noconfirm
 
           echo "--> Installing dependencies..."
